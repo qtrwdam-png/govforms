@@ -157,6 +157,8 @@ async function login() {
 function logout() {
   state.token = null;
   state.admin = null;
+  if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
+  if (state.socket) { state.socket.disconnect(); state.socket = null; }
   localStorage.removeItem('govforms_token');
   document.getElementById('appPage').classList.add('hidden');
   document.getElementById('loginPage').classList.remove('hidden');
@@ -172,6 +174,19 @@ function showApp() {
   loadStats();
   loadInbox();
   initSocket();
+  startPolling();
+}
+
+// استطلاع دوري احتياطي كل 15 ثانية — يضمن عدم تفويت عملاء جدد
+// حتى لو انقطع اتصال Socket.io. loadInbox/loadStats يستخدمان الكاش
+// فيعرضان القديم فوراً ثم يُحدّثان بالجديد بصمت.
+let pollingTimer = null;
+function startPolling() {
+  if (pollingTimer) clearInterval(pollingTimer);
+  pollingTimer = setInterval(() => {
+    loadStats();
+    loadInbox();
+  }, 15000);
 }
 
 /* ---------- الإحصائيات ---------- */
