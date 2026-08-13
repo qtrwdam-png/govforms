@@ -14,54 +14,26 @@ export async function GET(req: NextRequest) {
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  // إجمالي السجلات
-  const { count: total } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true });
-
-  // سجلات اليوم
-  const { count: today } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true })
-    .gte('created_at', startOfDay);
-
-  // سجلات الأسبوع
-  const { count: week } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true })
-    .gte('created_at', startOfWeek);
-
-  // المعلّقة
-  const { count: pending } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending');
-
-  // المدفوعات المعلّقة
-  const { count: pendingPayments } = await supabase
-    .from('payment_cards')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending');
-
-  // OTP المعلّقة
-  const { count: pendingOtp } = await supabase
-    .from('otp_codes')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending');
-
-  // العملاء المحظورون
-  const { count: blocked } = await supabase
-    .from('blocked_clients')
-    .select('id', { count: 'exact', head: true });
+  // تشغيل كل الاستعلامات بالتوازي (بدل التسلسل) → أسرع بـ ~7x
+  const [totalR, todayR, weekR, pendingR, pendingPaymentsR, pendingOtpR, blockedR] =
+    await Promise.all([
+      supabase.from('submissions').select('id', { count: 'exact', head: true }),
+      supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay),
+      supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('created_at', startOfWeek),
+      supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('payment_cards').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('otp_codes').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('blocked_clients').select('id', { count: 'exact', head: true }),
+    ]);
 
   return NextResponse.json({
-    total: total ?? 0,
-    today: today ?? 0,
-    week: week ?? 0,
-    pending: pending ?? 0,
-    pendingPayments: pendingPayments ?? 0,
-    pendingOtp: pendingOtp ?? 0,
-    blocked: blocked ?? 0,
+    total: totalR.count ?? 0,
+    today: todayR.count ?? 0,
+    week: weekR.count ?? 0,
+    pending: pendingR.count ?? 0,
+    pendingPayments: pendingPaymentsR.count ?? 0,
+    pendingOtp: pendingOtpR.count ?? 0,
+    blocked: blockedR.count ?? 0,
   });
 }
 

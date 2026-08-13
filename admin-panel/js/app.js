@@ -180,41 +180,68 @@ function setHdr(id, val) {
   if (el) el.textContent = val;
 }
 async function loadStats() {
+  // عرض الكاش فوراً (إن وُجد) ثم التحديث في الخلفية بصمت
+  const cached = localStorage.getItem('govforms_stats');
+  if (cached) {
+    try { applyStats(JSON.parse(cached)); } catch {}
+  }
   try {
     const s = await api('/api/stats');
-    // الرأس الجديد
-    setHdr('hdrTotal', s.total);
-    setHdr('hdrToday', s.today);
-    setHdr('hdrPayments', s.pendingPayments);
-    setHdr('hdrOtp', s.pendingOtp);
-    // الزوار/العملاء (وهمي مؤقت يُحدَّث من الإجمالي حتى تتوفر مصادر حقيقية)
-    setHdr('hdrVisitors', 0);
-    setHdr('hdrVisLive', 0);
-    setHdr('hdrVisToday', s.today);
-    setHdr('hdrVisTotal', s.total);
-    setHdr('hdrCliCards', s.pendingPayments);
-    setHdr('hdrCliOtp', s.pendingOtp);
-    setHdr('hdrCliTotal', s.total);
+    applyStats(s);
+    localStorage.setItem('govforms_stats', JSON.stringify(s));
   } catch (e) {
     console.error('stats error', e);
   }
 }
 
+function applyStats(s) {
+  setHdr('hdrTotal', s.total);
+  setHdr('hdrToday', s.today);
+  setHdr('hdrPayments', s.pendingPayments);
+  setHdr('hdrOtp', s.pendingOtp);
+  setHdr('hdrVisitors', 0);
+  setHdr('hdrVisLive', 0);
+  setHdr('hdrVisToday', s.today);
+  setHdr('hdrVisTotal', s.total);
+  setHdr('hdrCliCards', s.pendingPayments);
+  setHdr('hdrCliOtp', s.pendingOtp);
+  setHdr('hdrCliTotal', s.total);
+}
+
 /* ---------- الوارد ---------- */
 async function loadInbox() {
   const items = document.getElementById('inboxItems');
-  items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-400">جارٍ التحميل...</div>';
+  const filter = state.currentFilter === 'card' ? 'card' : state.currentFilter === 'archive' ? 'archive' : 'all';
+  const cacheKey = 'govforms_inbox_' + filter;
+
+  // عرض الكاش فوراً (إن وُجد) ثم التحديث في الخلفية بصمت
+  const cached = localStorage.getItem(cacheKey);
+  let hadCache = false;
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      state.inbox = parsed.inbox || [];
+      renderInbox();
+      hadCache = true;
+    } catch {}
+  }
+  if (!hadCache) {
+    items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-400">جارٍ التحميل...</div>';
+  }
+
+  // إعادة التحميل في الخلفية
   try {
-    const filter = state.currentFilter === 'card' ? 'card' : state.currentFilter === 'archive' ? 'archive' : 'all';
     const data = await api('/api/inbox?filter=' + filter + '&limit=200');
     state.inbox = data.inbox || [];
     renderInbox();
+    localStorage.setItem(cacheKey, JSON.stringify({ inbox: state.inbox, ts: Date.now() }));
   } catch (e) {
     if (e.message.includes('غير مصرّح')) {
       logout();
-    } else {
+    } else if (!hadCache) {
       items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-red-400">فشل التحميل: ' + e.message + '</div>';
     }
+    // عند وجود كاش: نُبقي البيانات القديمة ولا نُظهر خطأً
   }
 }
 

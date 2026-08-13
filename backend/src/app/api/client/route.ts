@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const supabase = getAdminClient();
 
-  // 1) بيانات العميل الأساسية (Profile box)
+  // 1) بيانات العميل الأساسية (يجب التحقق من وجوده أولاً)
   const { data: client, error: cErr } = await supabase
     .from('clients')
     .select('*')
@@ -26,33 +26,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'العميل غير موجود' }, { status: 404 });
   }
 
-  // 2) كل السجلات (submissions) للعميل
-  const { data: submissions } = await supabase
-    .from('submissions')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false });
+  // 2-5) كل السجلات + المدفوعات + OTP + الملفات بالتوازي (بدل التسلسل) → أسرع بـ ~4x
+  const [subR, payR, otpR, fileR] = await Promise.all([
+    supabase.from('submissions').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+    supabase.from('payment_cards').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+    supabase.from('otp_codes').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+    supabase.from('files').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+  ]);
 
-  // 3) كل بطاقات الدفع
-  const { data: payments } = await supabase
-    .from('payment_cards')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false });
-
-  // 4) كل رموز OTP
-  const { data: otps } = await supabase
-    .from('otp_codes')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false });
-
-  // 5) كل الملفات
-  const { data: files } = await supabase
-    .from('files')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false });
+  const submissions = subR.data || [];
+  const payments = payR.data || [];
+  const otps = otpR.data || [];
+  const files = fileR.data || [];
 
   // بناء الخط الزمني الموحّد: ندمج كل الأنواع ونعطي كل صندوق وقتاً ونوعاً
   type Box = {
