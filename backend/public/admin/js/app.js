@@ -719,17 +719,38 @@ function initSocket() {
   if (typeof io === 'undefined') return;
   state.socket = io(API, { path: '/api/socket', transports: ['websocket', 'polling'] });
 
-  state.socket.emit('admin:join');
+  // إعادة الانضمام لغرفة admins عند الاتصال/إعادة الاتصال
+  const joinAdmin = () => state.socket && state.socket.emit('admin:join');
+  state.socket.on('connect', joinAdmin);
+  joinAdmin();
 
-  state.socket.on('admin:new_entry', () => {
+  // إدخال جديد من العميل (نموذج/دفع/OTP) — تحديث فوري
+  state.socket.on('admin:new_entry', (payload) => {
     loadStats();
     loadInbox();
+    // إذا كانت تفاصيل هذا العميل مفتوحة، أعد تحميلها لرؤية البيانات الجديدة
+    if (payload?.clientId && payload.clientId === state.selectedClientId) {
+      selectClient(state.selectedClientId);
+    }
     playNotificationSound();
     showToast('📥 ورد سجل جديد');
   });
 
+  // تحديث قرار المدير (موافقة/رفض) — تحديث الإحصائيات
   state.socket.on('admin:decision_update', () => {
     loadStats();
+  });
+
+  // تحديث حالة الاتصال (presence) للعملاء
+  state.socket.on('admin:presence', (payload) => {
+    // تحديث حالة online للعميل في القائمة إن كان ظاهراً
+    if (payload?.fingerprint) {
+      const item = state.inbox.find((s) => s.client?.fingerprint === payload.fingerprint);
+      if (item && item.client) {
+        item.client.online = payload.online;
+        renderInbox();
+      }
+    }
   });
 }
 

