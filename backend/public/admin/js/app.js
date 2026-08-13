@@ -11,6 +11,7 @@ const state = {
   currentFilter: 'all',
   search: '',
   selectedClientId: null,
+  checkedIds: new Set(),
   currentTimeline: null,
   socket: null,
   blockTarget: null,
@@ -232,27 +233,7 @@ function activityText(s) {
 
 function renderInbox() {
   const items = document.getElementById('inboxItems');
-  let list = state.inbox;
-
-  // فلترة محلية (للبطاقة عند الحاجة)
-  if (state.currentFilter === 'card') {
-    list = list.filter((s) => s.hasPayment);
-  }
-  // بحث
-  if (state.search) {
-    const q = state.search.toLowerCase();
-    list = list.filter((s) => {
-      const c = s.client;
-      const last4 = c?.phone ? c.phone.slice(-4) : '';
-      return (
-        c?.full_name?.toLowerCase().includes(q) ||
-        c?.fingerprint?.toLowerCase().includes(q) ||
-        c?.phone?.includes(q) ||
-        last4.includes(q) ||
-        s.reference?.toLowerCase().includes(q)
-      );
-    });
-  }
+  const list = currentList();
 
   // عدّاد القائمة
   const badge = document.getElementById('countBadge');
@@ -260,6 +241,7 @@ function renderInbox() {
 
   if (!list.length) {
     items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-400">لا توجد سجلات</div>';
+    updateSelectAllBtn();
     return;
   }
 
@@ -267,6 +249,7 @@ function renderInbox() {
   list.forEach((s) => {
     const c = s.client || {};
     const selected = c.id === state.selectedClientId;
+    const checked = state.checkedIds.has(c.id);
     const online = !!c.online;
     const flag = countryFlag(c.country_code);
 
@@ -280,9 +263,16 @@ function renderInbox() {
     const row = document.createElement('div');
     row.className =
       'client-row flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 transition hover:bg-gray-50' +
-      (selected ? ' bg-blue-50/60' : '');
+      (selected ? ' bg-blue-50/60' : '') +
+      (checked ? ' ring-1 ring-inset ring-blue-300 bg-blue-50/40' : '');
     row.onclick = () => selectClient(c.id);
     row.innerHTML = `
+      <div class="shrink-0" onclick="event.stopPropagation(); toggleCheck('${c.id}')">
+        <svg class="check-box w-4 h-4 ${checked ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'}" viewBox="0 0 24 24" fill="${checked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="4"></rect>
+          ${checked ? '<path d="M20 6 9 17l-5-5" stroke-width="2.6"></path>' : ''}
+        </svg>
+      </div>
       <div class="relative shrink-0">
         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white" style="background:linear-gradient(135deg,#4b5563,#374151);box-shadow:0 0 0 2px rgba(107,114,128,0.18)">
           <svg viewBox="0 0 40 40" fill="none" class="w-7 h-7">
@@ -309,6 +299,66 @@ function renderInbox() {
     `;
     items.appendChild(row);
   });
+  updateSelectAllBtn();
+}
+
+/* ---------- تحديد العملاء (checkbox) ---------- */
+function toggleCheck(id) {
+  if (state.checkedIds.has(id)) state.checkedIds.delete(id);
+  else state.checkedIds.add(id);
+  renderInbox();
+  updateSelectAllBtn();
+}
+
+function toggleSelectAll() {
+  const list = currentList();
+  const allChecked = list.length > 0 && list.every((s) => state.checkedIds.has(s.client?.id));
+  if (allChecked) {
+    list.forEach((s) => state.checkedIds.delete(s.client?.id));
+  } else {
+    list.forEach((s) => s.client?.id && state.checkedIds.add(s.client.id));
+  }
+  renderInbox();
+  updateSelectAllBtn();
+}
+
+// قائمة العملاء الظاهرين حالياً (نفس منطق renderInbox)
+function currentList() {
+  let list = state.inbox;
+  if (state.currentFilter === 'card') list = list.filter((s) => s.hasPayment);
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    list = list.filter((s) => {
+      const c = s.client;
+      const last4 = c?.phone ? c.phone.slice(-4) : '';
+      return (
+        c?.full_name?.toLowerCase().includes(q) ||
+        c?.fingerprint?.toLowerCase().includes(q) ||
+        c?.phone?.includes(q) ||
+        last4.includes(q) ||
+        s.reference?.toLowerCase().includes(q)
+      );
+    });
+  }
+  return list;
+}
+
+// تحديث حالة زر تحديد الكل (مربع مع/بدون علامة) + عداد المحددين
+function updateSelectAllBtn() {
+  const btn = document.getElementById('selectAllBtn');
+  if (!btn) return;
+  const list = currentList();
+  const allChecked = list.length > 0 && list.every((s) => state.checkedIds.has(s.client?.id));
+  const svg = btn.querySelector('svg');
+  if (svg) {
+    svg.setAttribute('fill', allChecked ? 'currentColor' : 'none');
+    svg.classList.toggle('text-blue-600', allChecked);
+    svg.classList.toggle('text-gray-500', !allChecked);
+  }
+  const label = btn.querySelector('span.label');
+  if (label) label.textContent = allChecked ? 'إلغاء الكل' : 'تحديد الكل';
+  const counter = document.getElementById('checkedCount');
+  if (counter) counter.textContent = state.checkedIds.size ? `${state.checkedIds.size} محدد` : '';
 }
 
 /* ---------- تفاصيل العميل ---------- */
@@ -699,9 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // تحديد الكل
   const selectAllBtn = document.getElementById('selectAllBtn');
   if (selectAllBtn) {
-    selectAllBtn.onclick = () => {
-      document.querySelectorAll('#inboxItems .client-row').forEach((r) => r.click());
-    };
+    selectAllBtn.onclick = toggleSelectAll;
   }
 
   // التحقق التلقائي من التوكن

@@ -151,8 +151,10 @@
             <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100">
               <button id="selectAllBtn" class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect></svg>
-                تحديد الكل
+                <span class="label">تحديد الكل</span>
               </button>
+              <div class="flex-1"></div>
+              <span id="checkedCount" class="text-[11px] text-gray-400 font-mono"></span>
             </div>
           </div>
           <!-- قائمة العملاء -->
@@ -201,6 +203,6 @@
 
   <!-- Socket.io client -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>
