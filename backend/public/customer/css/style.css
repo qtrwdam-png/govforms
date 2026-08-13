@@ -1,0 +1,761 @@
+/* =====================================================================
+   GovForms — موقع العملاء — التنسيق
+   مستوحى من تحليل govforms-site-analysis-ar-he.txt
+   ===================================================================== */
+
+:root {
+  --gov-blue-dark: #1e3a5f;
+  --gov-blue: #2a5298;
+  --gov-blue-light: #3a6ea5;
+  --page-bg: #eef2f7;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --text-main: #1f2d3d;
+  --text-secondary: #6b7280;
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --success: #16a34a;
+  --focus-ring: #2563eb;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --max-width: 960px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Cairo', 'Tajawal', 'Segoe UI', sans-serif;
+  background: var(--page-bg);
+  color: var(--text-main);
+  line-height: 1.6;
+  direction: rtl;
+}
+
+/* =====================================================================
+   1) شريط Gov.il العلوي
+   ===================================================================== */
+.gov-topbar {
+  background: linear-gradient(90deg, var(--gov-blue-dark), var(--gov-blue-light));
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.gov-topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.gov-logo {
+  width: 38px;
+  height: 38px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.gov-topbar .actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.gov-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.gov-btn:hover { background: rgba(255,255,255,0.22); }
+
+/* =====================================================================
+   2) شريط الأدوات
+   ===================================================================== */
+.toolbar {
+  background: #fff;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 65px;
+  z-index: 90;
+}
+
+.toolbar button {
+  background: none;
+  border: none;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-left: 1px solid var(--card-border);
+}
+
+.toolbar button:first-child { border-left: none; }
+.toolbar button:hover { color: var(--gov-blue); background: #f8fafc; }
+
+/* =====================================================================
+   3) رأس الجهة الحكومية
+   ===================================================================== */
+.org-header {
+  max-width: var(--max-width);
+  margin: 24px auto 16px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.org-header .org-info { text-align: right; }
+
+.org-header h1 {
+  font-size: 22px;
+  color: var(--gov-blue-dark);
+  margin-bottom: 4px;
+}
+
+.org-header .org-sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.org-header .ref-number {
+  font-family: monospace;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.org-logo {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--gov-blue-dark), var(--gov-blue));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #fff;
+  margin-left: 16px;
+}
+
+/* =====================================================================
+   4) الحاوية والبطاقات
+   ===================================================================== */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto 60px;
+  padding: 0 16px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--card-border);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.card-header h2 {
+  font-size: 18px;
+  color: var(--gov-blue-dark);
+}
+
+.card-body { padding: 24px; }
+
+.field-note {
+  background: #eff6ff;
+  border-right: 3px solid var(--gov-blue);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.req-note {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.req-note .star { color: var(--error); }
+
+/* =====================================================================
+   5) الحقول
+   ===================================================================== */
+.field { margin-bottom: 18px; }
+
+.field label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--text-main);
+}
+
+.field .star { color: var(--error); margin-right: 2px; }
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text-main);
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+
+.field input.error,
+.field select.error,
+.field textarea.error {
+  border-color: var(--error);
+  background: var(--error-bg);
+}
+
+.field .err-msg {
+  color: var(--error);
+  font-size: 12px;
+  margin-top: 5px;
+  display: none;
+}
+
+.field .err-msg.show { display: block; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field textarea { resize: vertical; min-height: 120px; }
+
+.counter {
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+/* checkbox */
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.checkbox-field input { width: 18px; height: 18px; cursor: pointer; }
+
+/* tooltip info */
+.info-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--gov-blue);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  margin-right: 8px;
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  background: #1f2d3d;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  top: 28px;
+  right: 0;
+  z-index: 50;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.tooltip.show { display: block; }
+
+/* =====================================================================
+   6) رفع الملفات
+   ===================================================================== */
+.file-upload {
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.file-upload:hover { border-color: var(--gov-blue); background: #f8fafc; }
+
+.file-upload .upload-icon { font-size: 32px; margin-bottom: 8px; }
+
+.file-upload p { color: var(--text-secondary); font-size: 14px; }
+
+.file-list { margin-top: 12px; }
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f1f5f9;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.file-item .remove {
+  color: var(--error);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* =====================================================================
+   7) الأزرار
+   ===================================================================== */
+.btn-primary {
+  background: var(--gov-blue);
+  color: #fff;
+  border: none;
+  padding: 13px 36px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.btn-primary:hover { background: var(--gov-blue-dark); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+  background: #fff;
+  color: var(--gov-blue);
+  border: 1px solid var(--gov-blue);
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary:hover { background: #eff6ff; }
+
+.actions-row {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  margin-top: 24px;
+}
+
+/* =====================================================================
+   8) النوافذ المنبثقة (Modal)
+   ===================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.modal-header h3 { font-size: 18px; color: var(--gov-blue-dark); }
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.modal-body { padding: 24px; }
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+/* بطاقات الراديو */
+.radio-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+
+.radio-card {
+  border: 2px solid var(--card-border);
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.radio-card:hover { border-color: var(--gov-blue); }
+
+.radio-card.selected {
+  border-color: var(--gov-blue);
+  background: #eff6ff;
+}
+
+.radio-card .icon { font-size: 36px; margin-bottom: 8px; }
+.radio-card .label { font-weight: 600; font-size: 15px; }
+
+/* بطاقات الدعم */
+.support-card {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.support-card:hover { border-color: var(--gov-blue); background: #f8fafc; }
+
+.support-card h4 { font-size: 15px; color: var(--gov-blue-dark); margin-bottom: 4px; }
+.support-card p { font-size: 13px; color: var(--text-secondary); }
+
+.support-detail { display: none; }
+.support-detail.show { display: block; }
+
+.support-detail .line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 13px;
+}
+
+.support-detail .line:last-child { border-bottom: none; }
+.support-detail .line strong { color: var(--text-main); }
+
+/* =====================================================================
+   9) رسائل النجاح
+   ===================================================================== */
+.success-screen {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.success-screen .check {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+}
+
+.success-screen h2 { color: var(--success); margin-bottom: 12px; }
+.success-screen p { color: var(--text-secondary); margin-bottom: 8px; }
+
+.success-screen .ref {
+  font-family: monospace;
+  font-size: 20px;
+  background: #f1f5f9;
+  padding: 12px 24px;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 16px 0;
+  font-weight: 700;
+  color: var(--gov-blue-dark);
+}
+
+/* =====================================================================
+   10) التذييل
+   ===================================================================== */
+.footer {
+  background: var(--gov-blue-dark);
+  color: #cbd5e1;
+  padding: 20px 24px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.footer a {
+  color: #cbd5e1;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.footer a:hover { text-decoration: underline; }
+
+.footer .version { margin-top: 8px; font-size: 12px; opacity: 0.7; }
+
+/* =====================================================================
+   11) شاشة الاختيار (نوع التوجه)
+   ===================================================================== */
+.service-select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.hidden { display: none !important; }
+
+/* =====================================================================
+   11.5) صفحة الدفع + بطاقة المعاينة المصوّرة
+   ===================================================================== */
+.ref-note {
+  background: var(--gov-green-light, #e8f5e9);
+  border-inline-start: 3px solid var(--gov-green, #2e7d32);
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.ref-note strong { color: var(--gov-green-dark, #1b5e20); }
+
+.step-hint {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 14px;
+}
+
+/* بطاقة المعاينة المصوّرة */
+.card-preview {
+  background: linear-gradient(135deg, #004d26 0%, #1b5e20 60%, #2e7d32 100%);
+  border-radius: 16px;
+  padding: 22px;
+  color: #fff;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 77, 38, 0.25);
+}
+.card-preview::before,
+.card-preview::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+.card-preview::before { width: 180px; height: 180px; top: -60px; inset-inline-end: -40px; }
+.card-preview::after { width: 120px; height: 120px; bottom: -50px; inset-inline-start: -20px; }
+
+.card-preview-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+.cp-bank { font-size: 14px; font-weight: 600; }
+.cp-network {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+.cp-number {
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  letter-spacing: 2px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+}
+.cp-bottom {
+  display: flex;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+.cp-field { display: flex; flex-direction: column; }
+.cp-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+.cp-field span:last-child { font-size: 13px; font-family: 'Courier New', monospace; }
+
+/* صف أزرار الراديو للنوع */
+.radio-row {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+}
+.radio-row .radio-card {
+  flex: 1;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  background: #fff;
+}
+.radio-row .radio-card:has(input:checked) {
+  border-color: var(--gov-green, #2e7d32);
+  background: var(--gov-green-light, #e8f5e9);
+}
+.radio-row .radio-card input { display: none; }
+.radio-row .radio-card span { font-size: 14px; }
+
+/* =====================================================================
+   11.6) صفحة OTP
+   ===================================================================== */
+.otp-instr {
+  text-align: center;
+  color: #4b5563;
+  font-size: 14px;
+  margin: 16px 0 24px;
+  line-height: 1.6;
+}
+.otp-boxes {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+.otp-input {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--gov-green-dark, #1b5e20);
+  transition: all 0.15s;
+  font-family: 'Courier New', monospace;
+}
+.otp-input:focus {
+  border-color: var(--gov-green, #2e7d32);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  outline: none;
+}
+
+/* =====================================================================
+   12) Responsive — الهاتف
+   ===================================================================== */
+@media (max-width: 768px) {
+  .gov-topbar { padding: 0 14px; height: 56px; }
+  .gov-topbar .brand { font-size: 16px; }
+  .gov-logo { width: 32px; height: 32px; font-size: 18px; }
+  .gov-btn span.label { display: none; }
+
+  .toolbar button { padding: 8px 12px; font-size: 13px; }
+  .toolbar button span.label { display: none; }
+
+  .org-header { flex-direction: column-reverse; align-items: flex-end; gap: 12px; }
+  .org-header h1 { font-size: 18px; }
+
+  .field-row { grid-template-columns: 1fr; }
+  .radio-cards { grid-template-columns: 1fr; }
+
+  .actions-row { flex-direction: column; }
+  .btn-primary, .btn-secondary { width: 100%; }
+
+  /* تعديلات صفحة الدفع و OTP على الهاتف */
+  .card-preview { padding: 16px; }
+  .cp-number { font-size: 18px; letter-spacing: 1px; }
+  .cp-bottom { gap: 16px; }
+  .otp-input { width: 44px; height: 52px; font-size: 22px; }
+  .otp-boxes { gap: 8px; }
+  .radio-row { flex-direction: column; }
+}
