@@ -535,7 +535,7 @@ function renderTimelineBox(box) {
   }
 
   return `
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="detail-card bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
         <span class="text-sm font-semibold text-gray-700">${title}</span>
         <span class="text-[11px] text-gray-400 font-mono">⏱ ${time}</span>
