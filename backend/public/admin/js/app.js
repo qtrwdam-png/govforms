@@ -389,6 +389,9 @@ function updateSelectAllBtn() {
 }
 
 /* ---------- تفاصيل العميل ---------- */
+// كاش ذاكرة (سريع للتبديل بين العملاء) + كاش localStorage (يُعبر الجلسات)
+const clientCache = new Map();
+
 async function selectClient(clientId) {
   state.selectedClientId = clientId;
   renderInbox();
@@ -397,14 +400,36 @@ async function selectClient(clientId) {
   document.getElementById('inboxLayout').classList.add('show-detail');
 
   const detail = document.getElementById('inboxDetail');
-  detail.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">جارٍ التحميل...</div>';
+  const cacheKey = 'govforms_client_' + clientId;
 
+  // 1) عرض الكاش فوراً (ذاكرة أولاً، ثم localStorage) دون انتظار
+  let cached = clientCache.get(clientId);
+  if (!cached) {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw) {
+      try { cached = JSON.parse(raw); clientCache.set(clientId, cached); } catch {}
+    }
+  }
+  if (cached) {
+    state.currentTimeline = cached;
+    renderDetail(cached);
+  } else {
+    detail.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">جارٍ التحميل...</div>';
+  }
+
+  // 2) إعادة التحميل في الخلفية (تحديث صامت) ثم تحديث العرض عند الوصول
   try {
     const data = await api('/api/client?client_id=' + clientId);
     state.currentTimeline = data;
-    renderDetail(data);
+    clientCache.set(clientId, data);
+    try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch {}
+    // تحديث العرض فقط إن كان هذا العميل لا يزال محدداً (قد يكون المستخدم بدّل لعميل آخر)
+    if (state.selectedClientId === clientId) renderDetail(data);
   } catch (e) {
-    detail.innerHTML = '<div class="flex items-center justify-center h-full text-red-400 text-sm">فشل التحميل: ' + e.message + '</div>';
+    if (!cached && state.selectedClientId === clientId) {
+      detail.innerHTML = '<div class="flex items-center justify-center h-full text-red-400 text-sm">فشل التحميل: ' + e.message + '</div>';
+    }
+    // عند وجود كاش: نُبقي البيانات القديمة ولا نُظهر خطأً
   }
 }
 
