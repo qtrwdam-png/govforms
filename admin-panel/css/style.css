@@ -227,9 +227,8 @@ body {
 
 /* المحتوى */
 .content {
-  margin-right: 240px;
-  margin-top: 46px;
-  padding: 20px;
+  margin: 0;
+  padding: 0;
   flex: 1;
 }
 
@@ -287,20 +286,23 @@ body {
    ===================================================================== */
 .inbox-layout {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 16px;
-  height: calc(100vh - 46px - 140px);
+  grid-template-columns: minmax(280px, 1fr) 1.4fr;
+  gap: 0;
+  margin-top: 46px;
+  height: calc(100vh - 46px);
 }
 
 /* قائمة الوارد */
 .inbox-list {
   background: #fff;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--card-border);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  border-left: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin: 0;
 }
 
 .inbox-items {
@@ -499,16 +501,16 @@ body {
 }
 
 @media (max-width: 1024px) {
-  .inbox-layout { grid-template-columns: 1fr; height: auto; }
-  .inbox-list { max-height: 400px; }
-  .inbox-detail { min-height: 400px; }
+  .inbox-layout { grid-template-columns: minmax(260px, 1fr) 1.4fr; height: calc(100vh - 46px); }
+  .inbox-list { max-height: none; }
+  .inbox-detail { min-height: 0; }
 }
 
 @media (max-width: 768px) {
   /* نمط التبديل: قائمة تملأ الشاشة، التفاصيل مخفية افتراضياً */
   .inbox-layout {
     grid-template-columns: 1fr;
-    height: calc(100vh - 46px - 20px);
+    height: calc(100vh - 46px);
     position: relative;
   }
 
@@ -526,14 +528,6 @@ body {
   /* عند فتح التفاصيل: نخفي القائمة ونظهر التفاصيل */
   .inbox-layout.show-detail .inbox-list { display: none; }
   .inbox-layout.show-detail .inbox-detail { display: block; }
-
-  /* زر رجوع يظهر على الهاتف */
-  .back-btn { display: flex; }
-
-  .sidebar { width: 60px; }
-  .sidebar-item span:not(.icon):not(.badge) { display: none; }
-  .sidebar-item .badge { display: none; }
-  .content { margin-right: 60px; padding: 12px; }
 
   .topbar .brand span:not(.icon) { display: none; }
 
