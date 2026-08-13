@@ -356,11 +356,12 @@ body {
   overflow: hidden;
 }
 
-/* بطاقات الخط الزمني — عرض ≈400px متجاوب */
+/* بطاقات الخط الزمني — عرض ≈400px متجاوب، محاذاة لليمين */
 .detail-card {
   width: clamp(300px, 26%, 460px);
   max-width: 100%;
-  margin-inline: auto;
+  margin-right: 0;
+  margin-left: auto;
 }
 
 /* =====================================================================
