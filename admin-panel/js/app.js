@@ -181,9 +181,6 @@ function setHdr(id, val) {
 async function loadStats() {
   try {
     const s = await api('/api/stats');
-    // شارات الشريط الجانبي
-    setHdr('badgePending', s.pending);
-    setHdr('badgeBlocked', s.blocked);
     // الرأس الجديد
     setHdr('hdrTotal', s.total);
     setHdr('hdrToday', s.today);
